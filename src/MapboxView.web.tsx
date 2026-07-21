@@ -12,6 +12,7 @@ import {
   MapViewBaseProps,
   OverlayCollector,
   MarkerTilingOptions,
+  type GeoRectBounds,
   type MapCameraPosition,
   type GeoPoint,
   type MarkerAnimationOverlayEntry,
@@ -21,16 +22,20 @@ import type { MapboxViewStateInterface } from './MapboxViewState';
 import type { MapboxViewController } from './MapboxViewController';
 import type { StyleSpecification } from 'mapbox-gl';
 
-export interface MapboxViewProps extends MapViewBaseProps<MapboxViewStateInterface> {
+export interface MapBoxMapViewProps extends MapViewBaseProps<MapboxViewStateInterface> {
   // Web-specific
   maxZoom?: number;
   minZoom?: number;
-  accessToken?: string;
-  projection?: 'mercator' | 'globe';
+  /** Restricts panning/zooming so the viewport cannot leave this rectangle. */
+  restrictBounds?: GeoRectBounds;
   containerStyle?: React.CSSProperties;
   onError?: (error: Error) => void;
   children?: React.ReactNode;
   markerTilingOptions?: MarkerTilingOptions;
+}
+
+interface InternalMapBoxMapViewProps extends MapBoxMapViewProps {
+  projection: 'mercator' | 'globe';
 }
 
 /**
@@ -39,7 +44,7 @@ export interface MapboxViewProps extends MapViewBaseProps<MapboxViewStateInterfa
  * Note: You must import the Mapbox CSS separately:
  * import '@mapconductor/react-for-mapbox/style.css';
  */
-export function MapboxView({
+function InternalMapBoxMapView({
   state,
   onMapLoaded,
   onMapClick,
@@ -49,14 +54,14 @@ export function MapboxView({
   onCameraMoveEnd,
   maxZoom,
   minZoom,
-  accessToken,
-  projection = 'mercator',
+  restrictBounds,
+  projection,
   className,
   containerStyle,
   onError,
   children,
   markerTilingOptions,
-}: MapboxViewProps) {
+}: InternalMapBoxMapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [provider] = useState(() => new MapboxProvider());
   const [scope] = useState(() => new MapViewScope());
@@ -91,9 +96,10 @@ export function MapboxView({
     const config: MapboxConfig = {
       container: containerRef.current,
       style,
-      accessToken,
+      accessToken: state.accessToken,
       maxZoom,
       minZoom,
+      restrictBounds,
       projection,
       initCameraPosition: state.cameraPosition,
       markerTilingOptions,
@@ -259,4 +265,12 @@ export function MapboxView({
       </MapViewScopeProvider>
     </MapContext.Provider>
   );
+}
+
+export function MapBoxMapView(props: MapBoxMapViewProps) {
+  return <InternalMapBoxMapView {...props} projection="globe" />;
+}
+
+export function MapBoxMapView2D(props: MapBoxMapViewProps) {
+  return <InternalMapBoxMapView {...props} projection="mercator" />;
 }

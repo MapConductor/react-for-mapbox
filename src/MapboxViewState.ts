@@ -12,10 +12,13 @@ import {
 import { MapboxDesign, type MapboxMapDesignType } from './MapboxDesign';
 
 export interface MapboxViewStateInterface
-  extends MapViewStateInterface<MapboxMapDesignType> {}
+  extends MapViewStateInterface<MapboxMapDesignType> {
+  readonly accessToken?: string;
+}
 
 export interface MapboxViewStateParams {
   id?: string;
+  accessToken?: string;
   mapDesignType?: MapboxMapDesignType;
   cameraPosition?: MapCameraPosition;
 }
@@ -24,6 +27,7 @@ export class MapboxViewState
   extends MapViewState<MapboxMapDesignType>
   implements MapboxViewStateInterface {
   readonly id: string;
+  readonly accessToken?: string;
   private _cameraPosition: MapCameraPosition;
   private _mapDesignType: MapboxMapDesignType;
   private _controller: MapViewControllerInterface | null = null;
@@ -31,11 +35,13 @@ export class MapboxViewState
 
   constructor({
     id = createRandomId(),
+    accessToken,
     mapDesignType = MapboxDesign.Streets,
     cameraPosition = MapCameraPositionNS.Default,
   }: MapboxViewStateParams = {}) {
     super();
     this.id = id;
+    this.accessToken = accessToken;
     this._cameraPosition = cameraPosition;
     this._mapDesignType = mapDesignType;
   }

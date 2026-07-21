@@ -1,10 +1,10 @@
 export { MapboxProvider } from './MapboxProvider';
 export { MapboxViewController } from './MapboxViewController';
-export { MapboxView } from './MapboxView.web';
+export { MapBoxMapView, MapBoxMapView2D } from './MapboxView.web';
 export { MapboxDesign } from './MapboxDesign';
 export { MapboxViewState, useMapboxViewState } from './MapboxViewState';
 export type { MapboxMapDesignType } from './MapboxDesign';
 export type { MapboxViewStateInterface } from './MapboxViewState';
 export type { MapboxConfig } from './MapboxProvider';
-export type { MapboxViewProps } from './MapboxView.web';
+export type { MapBoxMapViewProps } from './MapboxView.web';
 export { ZoomAltitudeConverter } from './zoom/ZoomAltitudeConverter';
