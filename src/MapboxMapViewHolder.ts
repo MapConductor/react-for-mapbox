@@ -31,10 +31,6 @@ export class MapboxMapViewHolder extends MapViewHolderBase<HTMLElement, MapboxMa
     return { x: point.x, y: point.y };
   }
 
-  async fromScreenOffset(offset: Offset): Promise<GeoPoint | null> {
-    return this.fromScreenOffsetSync(offset);
-  }
-
   fromScreenOffsetSync(offset: Offset): GeoPoint {
     const lngLat = this.map.unproject([offset.x, offset.y]);
     return createGeoPoint({ latitude: lngLat.lat, longitude: lngLat.lng });
