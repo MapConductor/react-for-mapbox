@@ -1,4 +1,4 @@
-[English](https://github.com/MapConductor/react-for-mapbox/README.md) | 日本語 | [Español (Latinoamérica)](https://github.com/MapConductor/react-for-mapbox/README.es-419.md)
+[English](https://github.com/MapConductor/react-for-mapbox/blob/main/README.md) | 日本語 | [Español (Latinoamérica)](https://github.com/MapConductor/react-for-mapbox/blob/main/README.es-419.md)
 
 # @mapconductor/react-for-mapbox
 
