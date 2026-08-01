@@ -192,7 +192,7 @@ function getCircleController(
   const circleManager = new CircleManager<MapboxActualCircle>();
   const layer = new MapboxCircleLayer({ holder, canEditStyle });
   const renderer = new MapboxCircleOverlayRenderer({ layer, circleManager, holder });
-  return new MapboxCircleController(holder, renderer);
+  return new MapboxCircleController(renderer);
 }
 
 function getPolylineController(
@@ -202,7 +202,7 @@ function getPolylineController(
   const polylineManager = new PolylineManager<MapboxActualPolyline>();
   const layer = new MapboxPolylineLayer({ holder, canEditStyle });
   const renderer = new MapboxPolylineOverlayRenderer({ layer, polylineManager, holder });
-  return new MapboxPolylineController(holder, renderer);
+  return new MapboxPolylineController(renderer);
 }
 
 function getPolygonController(
@@ -212,7 +212,7 @@ function getPolygonController(
   const polygonManager = new PolygonManager<MapboxActualPolygon>();
   const layer = new MapboxPolygonLayer({ holder, canEditStyle });
   const renderer = new MapboxPolygonOverlayRenderer({ layer, polygonManager, holder });
-  return new MapboxPolygonConductor(holder, renderer);
+  return new MapboxPolygonConductor(renderer);
 }
 
 function getGroundImageController(

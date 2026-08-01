@@ -1,9 +1,6 @@
 import {
   AbstractPolylineOverlayRenderer,
-  createInterpolatePoints,
-  createLinearInterpolatePoints,
-  splitByMeridian,
-  type GeoPoint,
+  buildUnwrappedPolylinePath,
   type PolylineEntity,
   type PolylineManagerInterface,
   type PolylineState,
@@ -73,29 +70,24 @@ function createMapboxLines(
   state: PolylineState,
   zIndex: number,
 ): MapboxActualPolyline {
-  const points = interpolateAndNormalize(state.points, state.geodesic);
+  // Unwrapped path (longitudes continuous, may exceed ±180): Mapbox GL renders
+  // it seamlessly across the antimeridian without splitting.
+  const path = buildUnwrappedPolylinePath(state.points, state.geodesic);
+  if (path.length < 2) return [];
 
-  return splitByMeridian(points, state.geodesic)
-    .filter((line) => line.length >= 2)
-    .map((line, index): LineFeature => ({
-      type: 'Feature',
-      id: `polyline-${state.id}-${index}`,
-      geometry: {
-        type: 'LineString',
-        coordinates: line.map((point) => [point.longitude, point.latitude]),
-      },
-      properties: {
-        id: `polyline-${state.id}-${index}`,
-        [MapboxPolylineLayer.Prop.STROKE_COLOR]: state.strokeColor,
-        [MapboxPolylineLayer.Prop.STROKE_WIDTH]: state.strokeWidth,
-        [MapboxPolylineLayer.Prop.Z_INDEX]: zIndex,
-      },
-    }));
-}
-
-function interpolateAndNormalize(points: GeoPoint[], geodesic: boolean): GeoPoint[] {
-  const interpolated = geodesic
-    ? createInterpolatePoints(points)
-    : createLinearInterpolatePoints(points);
-  return interpolated.map((point) => point.normalize());
+  const feature: LineFeature = {
+    type: 'Feature',
+    id: `polyline-${state.id}-0`,
+    geometry: {
+      type: 'LineString',
+      coordinates: path.map((point) => [point.longitude, point.latitude]),
+    },
+    properties: {
+      id: `polyline-${state.id}-0`,
+      [MapboxPolylineLayer.Prop.STROKE_COLOR]: state.strokeColor,
+      [MapboxPolylineLayer.Prop.STROKE_WIDTH]: state.strokeWidth,
+      [MapboxPolylineLayer.Prop.Z_INDEX]: zIndex,
+    },
+  };
+  return [feature];
 }
