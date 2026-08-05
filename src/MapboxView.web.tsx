@@ -6,6 +6,7 @@ import {
   InfoBubbleOverlay,
   MarkerAnimationLayer,
   MapAttributionOverlay,
+  useMapUISettings,
   type InfoBubbleEntry,
 } from '@mapconductor/js-sdk-react';
 import {
@@ -16,6 +17,7 @@ import {
   type MapCameraPosition,
   type GeoPoint,
   type MarkerAnimationOverlayEntry,
+  type MapViewControllerInterface,
 } from '@mapconductor/js-sdk-core';
 import { MapboxProvider, MapboxConfig } from './MapboxProvider';
 import type { MapboxViewStateInterface } from './MapboxViewState';
@@ -65,7 +67,7 @@ function InternalMapBoxMapView({
   const containerRef = useRef<HTMLDivElement>(null);
   const [provider] = useState(() => new MapboxProvider());
   const [scope] = useState(() => new MapViewScope());
-  const [controller, setController] = useState<any>(null);
+  const [controller, setController] = useState<MapViewControllerInterface | null>(null);
   const [isReady, setIsReady] = useState(false);
   const bridgeUnsubs = useRef<(() => void)[]>([]);
   const typedControllerRef = useRef<MapboxViewController | null>(null);
@@ -204,6 +206,8 @@ function InternalMapBoxMapView({
       provider.destroy();
     };
   }, [state.mapDesignType.styleJsonURL]);
+
+  useMapUISettings(state, controller);
 
   // cameraTick is read here only to force a re-render when the camera moves,
   // so that toScreenOffset() recalculates bubble positions.

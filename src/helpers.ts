@@ -1,5 +1,5 @@
 import type { GeoJSONSource, Map as MapboxMap, SourceSpecification } from 'mapbox-gl';
-import { createGeoPoint, TileScheme, type GeoPoint, type GroundImageState, type PolygonState, type RasterLayerSource } from '@mapconductor/js-sdk-core';
+import { createGeoPoint, TileScheme, type GeoPoint, type GroundImageState, type PolygonState, RasterLayerSource } from '@mapconductor/js-sdk-core';
 
 export type Coordinate = [number, number];
 export type GeoJSONSourceData = Parameters<GeoJSONSource['setData']>[0];
@@ -121,7 +121,7 @@ export function createRasterSource(source: RasterLayerSource): SourceSpecificati
       return {
         type: 'raster',
         tiles: [source.template],
-        tileSize: source.tileSize ?? 256,
+        tileSize: source.tileSize ?? RasterLayerSource.DEFAULT_TILE_SIZE,
         minzoom: source.minZoom ?? 0,
         maxzoom: source.maxZoom ?? 22,
         scheme: source.scheme === TileScheme.TMS ? 'tms' : 'xyz',
