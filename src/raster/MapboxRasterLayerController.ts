@@ -2,6 +2,7 @@ import {
   createRasterLayerEntity,
   RasterLayerController,
   RasterLayerManager,
+  type RasterHeaderSupport,
 } from '@mapconductor/js-sdk-core';
 import {
   type MapboxRasterLayerHandle,
@@ -15,6 +16,16 @@ import {
  * ラスターレイヤーを貼り直す（android-sdk の reapplyStyle 相当）。
  */
 export class MapboxRasterLayerController extends RasterLayerController<MapboxRasterLayerHandle> {
+  /**
+   * mapbox-gl の transformRequest（MapboxProvider が地図生成時に差している）。
+   * android / ios の Mapbox SDK には同等の口が無く、web だけが対応できる。
+   *
+   * userAgent はブラウザが上書きを許さないので、どのプロバイダでも web では効かない。
+   */
+  protected override get headerSupport(): RasterHeaderSupport {
+    return { provider: 'Mapbox', extraHeaders: true };
+  }
+
   constructor(renderer: MapboxRasterLayerOverlayRenderer) {
     super({ rasterLayerManager: new RasterLayerManager<MapboxRasterLayerHandle>(), renderer });
   }

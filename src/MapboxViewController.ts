@@ -2,7 +2,7 @@ import type { Map as MapboxMap } from 'mapbox-gl';
 import {
   BaseMapViewController,
   createGeoRectBounds,
-  type CameraOptions,
+  type CameraRestriction,
   type CircleCapable,
   type CircleState,
   type GeoRectBounds,
@@ -29,8 +29,10 @@ import {
   type MapUISettings,
   type GlGestureHandlers,
   applyGlMapUISettings,
+  isEmptyCameraRestriction,
 } from '@mapconductor/js-sdk-core';
 import { lngLatFromEvent } from './helpers';
+import { ZoomAltitudeConverter } from './zoom/ZoomAltitudeConverter';
 import { toCameraPosition, toMapCameraPosition } from './MapCameraPosition';
 import { MapboxMapViewHolder } from './MapboxMapViewHolder';
 import { MapboxMarkerController } from './marker/MapboxMarkerController';
@@ -256,27 +258,25 @@ export class MapboxViewController
     });
   }
 
-  animateCamera(position: MapCameraPosition, options?: CameraOptions): Promise<boolean> {
+  animateCamera(position: MapCameraPosition, durationMillis: number): Promise<boolean> {
     this.logicalTiltHint = position.tilt;
     const cam = toCameraPosition(position);
     return new Promise((resolve) => {
       this.mapInstance.once('moveend', () => resolve(true));
-      const padding = options?.padding ?? options?.paddings;
       this.mapInstance.easeTo({
         center: cam.center,
         zoom: cam.zoom,
         bearing: cam.bearing,
         pitch: cam.tilt,
-        duration: options?.duration || 500,
-        ...(padding != null ? { padding } : {}),
+        duration: durationMillis || 500,
       });
     });
   }
 
-  fitBounds(bounds: GeoRectBounds, options?: CameraOptions): Promise<boolean> {
+  fitBounds(bounds: GeoRectBounds, padding: number): Promise<boolean> {
     return new Promise((resolve) => {
       this.mapInstance.once('moveend', () => resolve(true));
-      const fitPadding = options?.padding ?? options?.paddings;
+      const fitPadding = padding;
       this.mapInstance.fitBounds(
         [
           [bounds.southWest!.longitude, bounds.southWest!.latitude],
@@ -288,9 +288,6 @@ export class MapboxViewController
           // (maplibre-gl resets bearing to 0 when omitted).
           bearing: this.mapInstance.getBearing(),
           pitch: this.mapInstance.getPitch(),
-          // Only pass duration when provided: maplibre-gl v6 treats an explicit
-          // `duration: undefined` as a no-op fit (the camera never moves).
-          ...(options?.duration != null ? { duration: options.duration } : {}),
         },
       );
     });
@@ -312,9 +309,6 @@ export class MapboxViewController
     return camera.copy({ visibleRegion });
   }
 
-  getBounds(): GeoRectBounds | null {
-    return this.getVisibleRegion()?.bounds ?? null;
-  }
 
   /**
    * Projects the four screen corners of the map viewport back to geo
@@ -476,7 +470,43 @@ export class MapboxViewController
     await this.rasterLayerController.clear();
   }
 
+  /**
+   * Mapbox はネイティブの範囲制限 API を持つので、
+   * `BaseMapViewController` のクランプ方式ではなく直接適用する。
+   * android-sdk の `MapboxMapViewController.setCameraRestriction` と同じ方針。
+   */
+  override setCameraRestriction(restriction: CameraRestriction | null): void {
+    // super は呼ばない。基底クラスに保持させるとカメラ停止時のクランプ補正まで走ってしまう。
+    // ネイティブ API 側で既に制限されているので二重適用になる（android-sdk と同じ振り分け）。
+    const effective = isEmptyCameraRestriction(restriction) ? null : restriction;
+
+    const bounds = effective?.bounds ?? null;
+    const sw = bounds?.southWest ?? null;
+    const ne = bounds?.northEast ?? null;
+    if (sw != null && ne != null) {
+      this.mapInstance.setMaxBounds([
+        [sw.longitude, sw.latitude],
+        [ne.longitude, ne.latitude],
+      ]);
+    } else {
+      // 解除は null を渡す。mapbox-gl の型は非 null の LngLatBoundsLike しか受けないが、
+      // 実装は null で制限解除する（公式ドキュメント記載の挙動）。
+      (this.mapInstance as unknown as { setMaxBounds(bounds: null): void }).setMaxBounds(null);
+    }
+
+    // 統一ズーム（Google 準拠）を Mapbox のズーム体系へ変換する。
+    const minZoom = effective?.minZoom;
+    const maxZoom = effective?.maxZoom;
+    this.mapInstance.setMinZoom(
+      minZoom == null ? null : ZoomAltitudeConverter.googleZoomToMapboxZoom(minZoom),
+    );
+    this.mapInstance.setMaxZoom(
+      maxZoom == null ? null : ZoomAltitudeConverter.googleZoomToMapboxZoom(maxZoom),
+    );
+  }
+
   destroy(): void {
+    super.destroy();
     this.markerEventController.destroy();
     void this.clearOverlays().finally(() => {
       this.markerController.destroy();

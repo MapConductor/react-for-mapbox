@@ -9,6 +9,7 @@ import {
   type GeoRectBounds,
   type MapConfig,
   type MapViewControllerInterface,
+  withRasterHeaderTransform,
 } from '@mapconductor/js-sdk-core';
 import { MapboxViewController } from './MapboxViewController';
 import { ZoomAltitudeConverter } from './zoom/ZoomAltitudeConverter';
@@ -93,6 +94,9 @@ export class MapboxProvider extends MapProvider {
       maxBounds: toLngLatBounds(config.restrictBounds),
       ...config.options,
       projection: config.projection || 'mercator',
+      // RasterLayer の extraHeaders をタイル要求に載せる唯一の口。mapbox-gl には
+      // setTransformRequest が無く、生成時に渡す以外の方法がない。
+      transformRequest: withRasterHeaderTransform(config.options?.transformRequest),
     } as mapboxgl.MapOptions);
 
     // Track map immediately so destroy() can remove it even before load fires
