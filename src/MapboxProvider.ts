@@ -1,6 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 import {
   CircleManager,
+  MapProjection,
   MapProvider,
   MarkerManager,
   MarkerTilingOptions,
@@ -41,7 +42,7 @@ export interface MapboxConfig extends MapConfig {
   minZoom?: number;
   /** Restricts panning/zooming so the viewport cannot leave this rectangle. */
   restrictBounds?: GeoRectBounds;
-  projection?: 'mercator' | 'globe';
+  projection?: MapProjection;
   markerTilingOptions?: MarkerTilingOptions;
 }
 
@@ -93,7 +94,7 @@ export class MapboxProvider extends MapProvider {
       minZoom: config.minZoom !== undefined ? ZoomAltitudeConverter.googleZoomToMapboxZoom(config.minZoom) : undefined,
       maxBounds: toLngLatBounds(config.restrictBounds),
       ...config.options,
-      projection: config.projection || 'mercator',
+      projection: config.projection === MapProjection.Globe ? 'globe' : 'mercator',
       // RasterLayer の extraHeaders をタイル要求に載せる唯一の口。mapbox-gl には
       // setTransformRequest が無く、生成時に渡す以外の方法がない。
       transformRequest: withRasterHeaderTransform(config.options?.transformRequest),
@@ -141,6 +142,7 @@ export class MapboxProvider extends MapProvider {
       rasterLayerController,
       styleReadyRef,
       config.initCameraPosition?.tilt ?? null,
+      config.projection ?? MapProjection.Mercator,
     );
     return this.controller;
   }

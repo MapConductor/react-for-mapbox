@@ -113,7 +113,7 @@ export class MapboxViewState
   }
 }
 
-export function useMapboxViewState(params: MapboxViewStateParams = {}): MapboxViewState {
+export function useMapboxViewState(params: MapboxViewStateParams = {}): MapboxViewStateInterface {
   const [state] = useState(() => new MapboxViewState(params));
   return state;
 }

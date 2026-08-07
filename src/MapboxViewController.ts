@@ -28,6 +28,7 @@ import {
   type GlGestureHandlers,
   applyGlMapUISettings,
   isEmptyCameraRestriction,
+  MapProjection,
 } from '@mapconductor/js-sdk-core';
 import { ZoomAltitudeConverter } from './zoom/ZoomAltitudeConverter';
 import { MapboxMapViewHolder } from './MapboxMapViewHolder';
@@ -61,6 +62,8 @@ export class MapboxViewController
   private initialized = false;
   private logicalTiltHint: number | null = null;
   private readonly styleReadyRef: { current: boolean };
+  /** 現在の投影法。android-sdk の MapboxMapViewController の projection と同じ役割。 */
+  private projection: MapProjection;
 
   readonly holder: MapboxMapViewHolder;
   private readonly markerController: MapboxMarkerController;
@@ -82,6 +85,7 @@ export class MapboxViewController
     rasterLayerController: MapboxRasterLayerController,
     styleReadyRef: { current: boolean } = { current: true },
     logicalTiltHint: number | null = null,
+    projection: MapProjection = MapProjection.Mercator,
   ) {
     super();
     this.mapInstance = holder.map;
@@ -90,6 +94,7 @@ export class MapboxViewController
     this.holder.setController(this);
     this.styleReadyRef = styleReadyRef;
     this.logicalTiltHint = logicalTiltHint;
+    this.projection = projection;
     this.markerController = markerController;
     this.markerEventController = markerEventController;
     this.circleController = circleController;
@@ -109,6 +114,18 @@ export class MapboxViewController
 
   getMap(): MapboxMap {
     return this.mapInstance;
+  }
+
+  /**
+   * 投影法を切り替える。android-sdk の `MapboxMapViewController.setProjection` /
+   * ios-sdk の `Coordinator.setProjection` と同じく、同値なら何もしない。
+   */
+  setProjection(projection: MapProjection): void {
+    if (this.projection === projection) return;
+    this.projection = projection;
+    this.mapInstance.setProjection(
+      projection === MapProjection.Globe ? 'globe' : 'mercator',
+    );
   }
 
   applyUISettings(settings: MapUISettings): void {
