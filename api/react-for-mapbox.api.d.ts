@@ -1,4 +1,4 @@
-import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, OnMarkerEventHandler, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, OnPolygonEventHandler, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, MarkerAnimationOverlayHost, OnCircleEventHandler, OnPolylineEventHandler, OnGroundImageEventHandler, CameraRestriction, MapDesignTypeInterface, AttributionRule, MapViewStateInterface, MapViewState, MapViewHolder, MapViewBaseProps, AbstractZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
+import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, OnMarkerEventHandler, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, OnPolygonEventHandler, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, MarkerAnimationOverlayHost, OnCircleEventHandler, OnPolylineEventHandler, OnGroundImageEventHandler, CameraRestriction, MapDesignTypeInterface, AttributionRule, MapViewStateInterface, MapViewState, MapViewHolder, MapViewBaseProps, WebMercatorZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
 import { Map } from 'mapbox-gl';
 import React from 'react';
 
@@ -623,23 +623,18 @@ interface MapBoxMapViewProps extends MapViewBaseProps<MapboxViewStateInterface> 
 declare function MapBoxMapView(props: MapBoxMapViewProps): React.JSX.Element;
 declare function MapBoxMapView2D(props: MapBoxMapViewProps): React.JSX.Element;
 
-declare class ZoomAltitudeConverter extends AbstractZoomAltitudeConverter {
+/**
+ * 統一ズーム（Google Maps 基準・256px タイル）⇄ 高度の変換。
+ *
+ * Mapbox は 512px タイルのベクタエンジンなので、統一ズームはネイティブズーム + 1。
+ * 換算式はコアの {@link WebMercatorZoomAltitudeConverter} にある。
+ */
+declare class ZoomAltitudeConverter extends WebMercatorZoomAltitudeConverter {
     /** Empirical offset: GoogleZoom ≈ MapboxSDK.zoom + 1.0 */
     static readonly MAPBOX_TO_GOOGLE_ZOOM_OFFSET = 1;
+    constructor(zoom0Altitude?: number);
     static mapboxZoomToGoogleZoom(mapboxZoom: number): number;
     static googleZoomToMapboxZoom(googleZoom: number): number;
-    private cosLatitudeFactor;
-    private cosTiltFactor;
-    zoomLevelToAltitude({ zoomLevel, latitude, tilt, }: {
-        zoomLevel: number;
-        latitude: number;
-        tilt: number;
-    }): number;
-    altitudeToZoomLevel({ altitude, latitude, tilt, }: {
-        altitude: number;
-        latitude: number;
-        tilt: number;
-    }): number;
 }
 
 export { MapBoxMapView, MapBoxMapView2D, type MapBoxMapViewProps, type MapboxConfig, MapboxDesign, type MapboxMapDesignType, MapboxProvider, MapboxViewController, MapboxViewState, type MapboxViewStateInterface, ZoomAltitudeConverter, useMapboxViewState };
