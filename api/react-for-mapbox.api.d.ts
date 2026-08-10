@@ -1,4 +1,4 @@
-import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, OnMarkerEventHandler, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, SlottedOverlayController, OnPolygonEventHandler, OverlayKind, OverlayHit, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, MarkerAnimationOverlayHost, OnGroundImageEventHandler, CameraRestriction, MapDesignTypeInterface, AttributionRule, MapViewStateInterface, MapViewState, MapViewBaseProps, WebMercatorZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
+import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, DefaultMarkerEventController, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, SlottedOverlayController, OnPolygonEventHandler, OverlayKind, OverlayHit, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, OnMarkerEventHandler, MarkerAnimationOverlayHost, OnGroundImageEventHandler, CameraRestriction, MapDesignTypeInterface, AttributionRule, MapViewStateInterface, MapViewState, MapViewBaseProps, WebMercatorZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
 import { Map } from 'mapbox-gl';
 import React from 'react';
 
@@ -178,32 +178,18 @@ declare class MapboxMarkerController extends AbstractMarkerController<MapboxActu
     private hasCompositionChanges;
 }
 
-declare class MapboxMarkerEventController {
-    private readonly controller;
-    private activePointerId;
-    private dragPanWasEnabled;
-    private pointerDownOffset;
-    private dragStarted;
-    /** Last observed pointer input type — used by MapboxViewController for tile-marker hit radius. */
-    lastPointerType: 'touch' | 'mouse';
+/**
+ * Mapbox のマーカーイベント。
+ *
+ * ドラッグの状態遷移・パン抑止・リスナー転送はすべてコアの
+ * {@link DefaultMarkerEventController} が持つ。ここに残るのは
+ * **Mapbox 固有のもの**だけ——いまは何も無い。
+ *
+ * 移行前はこのファイルが 165 行あり、maplibre / mapbox / maptiler / tomtom / longdo の
+ * 5 本が**型名以外 1 文字も違わなかった**。
+ */
+declare class MapboxMarkerEventController extends DefaultMarkerEventController<MapboxActualMarker> {
     constructor(controller: MapboxMarkerController);
-    resync(): void;
-    setClickListener(listener: OnMarkerEventHandler | null): void;
-    setDragStartListener(listener: OnMarkerEventHandler | null): void;
-    setDragListener(listener: OnMarkerEventHandler | null): void;
-    setDragEndListener(listener: OnMarkerEventHandler | null): void;
-    setAnimateStartListener(listener: OnMarkerEventHandler | null): void;
-    setAnimateEndListener(listener: OnMarkerEventHandler | null): void;
-    destroy(): void;
-    private readonly handlePointerDown;
-    private readonly handlePointerMove;
-    private readonly handlePointerUp;
-    private readonly handlePointerCancel;
-    private finishDrag;
-    private restoreMapInteraction;
-    private findMarkerAtPointer;
-    private positionFromPointer;
-    private localPoint;
 }
 
 type MapboxActualCircle = PolygonFeature & {
