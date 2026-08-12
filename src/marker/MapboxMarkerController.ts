@@ -280,9 +280,11 @@ export class MapboxMarkerController extends AbstractMarkerController<MapboxActua
       const clickScreen = this.holder.toScreenOffset(position);
       // Mapbox returns matching symbols topmost-first, so the first regular
       // marker in the list is the one drawn on top of the stack.
-      const topMost = (features: Array<{ properties?: Record<string, unknown> | null }>) => {
+      // mapbox-gl 3.28 types GeoJSONFeature via the ambient GeoJSON namespace,
+      // which is not visible from this package, so treat features structurally.
+      const topMost = (features: readonly unknown[]) => {
         for (const feature of features) {
-          const id = feature.properties?.['mc-id'];
+          const id = (feature as { properties?: Record<string, unknown> | null }).properties?.['mc-id'];
           if (typeof id !== 'string') continue;
           const entity = this.markerManager.getEntity(id);
           if (entity && entity.marker !== null) return entity;
