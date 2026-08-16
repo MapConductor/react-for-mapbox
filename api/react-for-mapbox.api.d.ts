@@ -1,6 +1,8 @@
-import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, DefaultMarkerEventController, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, SlottedOverlayController, OnPolygonEventHandler, OverlayKind, OverlayHit, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, OnMarkerEventHandler, MarkerAnimationOverlayHost, OnGroundImageEventHandler, CameraRestriction, MapDesignTypeInterface, AttributionRule, MapViewStateInterface, MapViewState, MapViewBaseProps, WebMercatorZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
+import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, DefaultMarkerEventController, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, SlottedOverlayController, OnPolygonEventHandler, OverlayKind, OverlayHit, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, OnMarkerEventHandler, MarkerAnimationOverlayHost, OnGroundImageEventHandler, CameraRestriction, MapViewBaseProps, WebMercatorZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
 import { Map } from 'mapbox-gl';
 import React from 'react';
+import { MapboxViewStateInterface } from './state.js';
+export { MapboxDesign, MapboxMapDesignType, MapboxViewState, useMapboxViewState } from './state.js';
 
 interface MapboxConfig extends MapConfig {
     style?: string | mapboxgl.StyleSpecification;
@@ -464,6 +466,17 @@ declare class MapboxRasterLayerOverlayRenderer implements RasterLayerOverlayRend
     onPostProcess(): Promise<void>;
     private addLayer;
     private updateLayer;
+    /**
+     * スタイル再読込中に頼まれた削除の保留分。
+     *
+     * 追加は「ハンドルだけ返して resync が貼り直す」で済むが、削除は manager から
+     * 先に消えるため resync では拾えない。黙って捨てると、スタイル差分適用で
+     * 生き残った GL レイヤが画面に残り続ける（RasterLayer ページで選んだレリーフが
+     * GeoJSON Layer ページにも出る、という形で顕在化した）。ここで保留しておき、
+     * スタイルが編集可能になった最初の操作でまとめて消す。
+     */
+    private pendingRemovals;
+    private flushPendingRemovals;
     private removeLayer;
 }
 
@@ -543,48 +556,6 @@ declare class MapboxViewController extends BaseMapViewController implements MapV
     destroy(): void;
 }
 
-interface MapboxMapDesignType extends MapDesignTypeInterface<string> {
-    readonly styleJsonURL: string;
-}
-declare class MapboxDesign implements MapboxMapDesignType {
-    readonly id: string;
-    readonly styleJsonURL: string;
-    readonly attributionRules: readonly AttributionRule[];
-    constructor(id: string, styleJsonURL: string, attributionRules?: readonly AttributionRule[]);
-    getValue(): string;
-    static readonly Streets: MapboxDesign;
-    static readonly Outdoors: MapboxDesign;
-    static readonly Light: MapboxDesign;
-    static readonly Dark: MapboxDesign;
-    static readonly SatelliteStreets: MapboxDesign;
-    static readonly OsmBright: MapboxDesign;
-    static readonly OsmBrightEn: MapboxDesign;
-    static readonly OsmBrightJa: MapboxDesign;
-    static readonly MapTilerTonerJa: MapboxDesign;
-    static readonly MapTilerTonerEn: MapboxDesign;
-    static readonly MapTilerBasicEn: MapboxDesign;
-    static readonly MapTilerBasicJa: MapboxDesign;
-    static readonly OpenMapTiles: MapboxDesign;
-}
-
-interface MapboxViewStateInterface extends MapViewStateInterface<MapboxMapDesignType> {
-    readonly accessToken?: string;
-}
-interface MapboxViewStateParams {
-    id?: string;
-    accessToken?: string;
-    mapDesignType?: MapboxMapDesignType;
-    cameraPosition?: MapCameraPosition;
-}
-declare class MapboxViewState extends MapViewState<MapboxMapDesignType> implements MapboxViewStateInterface {
-    readonly accessToken?: string;
-    private _mapDesignType;
-    constructor({ id, accessToken, mapDesignType, cameraPosition, }?: MapboxViewStateParams);
-    get mapDesignType(): MapboxMapDesignType;
-    set mapDesignType(value: MapboxMapDesignType);
-}
-declare function useMapboxViewState(params?: MapboxViewStateParams): MapboxViewStateInterface;
-
 interface MapBoxMapViewProps extends MapViewBaseProps<MapboxViewStateInterface> {
     maxZoom?: number;
     minZoom?: number;
@@ -618,4 +589,4 @@ declare class ZoomAltitudeConverter extends WebMercatorZoomAltitudeConverter {
     static googleZoomToMapboxZoom(googleZoom: number): number;
 }
 
-export { MapBoxMapView, MapBoxMapView2D, type MapBoxMapViewProps, type MapboxConfig, MapboxDesign, type MapboxMapDesignType, MapboxProvider, MapboxViewController, MapboxViewState, type MapboxViewStateInterface, ZoomAltitudeConverter, useMapboxViewState };
+export { MapBoxMapView, MapBoxMapView2D, type MapBoxMapViewProps, type MapboxConfig, MapboxProvider, MapboxViewController, MapboxViewStateInterface, ZoomAltitudeConverter };
