@@ -1,6 +1,6 @@
 {
   "name": "@mapconductor/react-for-mapbox",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Mapbox provider for MapConductor React SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@mapconductor/js-sdk-core": "^0.2.0",
-    "@mapconductor/js-sdk-react": "^0.2.0",
+    "@mapconductor/js-sdk-react": "^0.2.1",
     "mapbox-gl": "^3.29.0"
   },
   "devDependencies": {
