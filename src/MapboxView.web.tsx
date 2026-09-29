@@ -1,3 +1,4 @@
+import { MapboxDesign } from './MapboxDesign';
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   MapContext,
@@ -25,8 +26,7 @@ import {
   type GeoPoint,
   type MarkerAnimationOverlayEntry,
   type MapViewControllerInterface,
-  mapViewStateInternal,
-} from '@mapconductor/js-sdk-core';
+  mapViewStateInternal, BLANK_MAP_STYLE } from '@mapconductor/js-sdk-core';
 import { MapboxProvider, MapboxConfig } from './MapboxProvider';
 import type { MapboxViewStateInterface } from './MapboxViewState';
 import type { MapboxViewController } from './MapboxViewController';
@@ -111,7 +111,12 @@ function InternalMapBoxMapView({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const style = state.mapDesignType.styleJsonURL as string | StyleSpecification;
+    // `None` is handed over as the style object: mapbox-gl rejects a `data:`
+    // style URL (it goes through its own request path, not fetch).
+    const style =
+      state.mapDesignType.id === MapboxDesign.None.id
+        ? (BLANK_MAP_STYLE as StyleSpecification)
+        : (state.mapDesignType.styleJsonURL as string | StyleSpecification);
 
     const config: MapboxConfig = {
       container: containerRef.current,
