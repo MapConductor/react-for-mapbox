@@ -27,6 +27,7 @@ import {
   type MarkerAnimationOverlayEntry,
   type MapViewControllerInterface,
   mapViewStateInternal, BLANK_MAP_STYLE } from '@mapconductor/js-sdk-core';
+import { VectorStyleAsDesign, VectorStyleSupportKey } from '@mapconductor/js-sdk-core';
 import { MapboxProvider, MapboxConfig } from './MapboxProvider';
 import type { MapboxViewStateInterface } from './MapboxViewState';
 import type { MapboxViewController } from './MapboxViewController';
@@ -60,6 +61,39 @@ interface InternalMapBoxMapViewProps extends MapBoxMapViewProps {
  * Note: You must import the Mapbox CSS separately:
  * import '@mapconductor/react-for-mapbox/style.css';
  */
+/**
+ * What Mapbox GL JS will accept of a MapLibre style.
+ *
+ * The layer properties are shared, but two root keys are not: MapLibre's
+ * `projection` is `{ type }` where Mapbox's is `{ name }` -- and Mapbox's
+ * validator crashes on the former rather than reporting it -- and MapLibre's
+ * root `sky` is a colour ramp Mapbox has no equivalent for (its sky is a
+ * layer). The projection is carried over where the name is shared; the sky
+ * is dropped; of several sprite sheets the default one is kept. A URL is
+ * passed through untouched: what it points at is the server's business.
+ */
+function toMapboxStyle(style: string | object): string | object {
+  if (typeof style === 'string') return style;
+  const { projection, sky, sprite, ...rest } = style as {
+    projection?: { type?: string; name?: string };
+    sky?: unknown;
+    sprite?: string | { id?: string; url: string }[];
+  };
+  const result: Record<string, unknown> = { ...rest };
+  const name = projection?.name ?? projection?.type;
+  if (name === 'globe' || name === 'mercator') result.projection = { name };
+  // MapLibre allows several sprite sheets; Mapbox takes one. The default
+  // sheet is the one unprefixed icon names resolve to.
+  if (Array.isArray(sprite)) {
+    const chosen = sprite.find((entry) => entry.id === 'default') ?? sprite[0];
+    if (chosen) result.sprite = chosen.url;
+  } else if (sprite !== undefined) {
+    result.sprite = sprite;
+  }
+  void sky;
+  return result;
+}
+
 function InternalMapBoxMapView({
   state,
   onMapLoaded,
@@ -252,6 +286,17 @@ function InternalMapBoxMapView({
   // so that toScreenOffset() recalculates bubble positions.
   void cameraTick;
 
+
+  // Mapbox draws vector styles natively: a layer with a style to show hands
+  // it over instead of rasterising it. Registered on mount, before the map
+  // is ready, so a layer reading the registry on the ready re-render finds it.
+  useEffect(() => {
+    state.serviceRegistry.put(
+      VectorStyleSupportKey,
+      new VectorStyleAsDesign(state, (style, key, rules) => new MapboxDesign(key, toMapboxStyle(style), rules)),
+    );
+    return () => state.serviceRegistry.remove(VectorStyleSupportKey);
+  }, [state]);
 
   // マーカー描画 capability をこのマップのサービスレジストリへ登録する。
   // marker-clustering などの拡張がここから解決する
