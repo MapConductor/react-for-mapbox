@@ -1,4 +1,7 @@
 import type { Map as MapboxMap } from 'mapbox-gl';
+import type { StyleSpecification } from 'mapbox-gl';
+import { MapboxDesign, type MapboxMapDesignType } from './MapboxDesign';
+import { BLANK_MAP_STYLE } from '@mapconductor/js-sdk-core';
 import {
   BaseMapViewController,
   type CameraRestriction,
@@ -112,6 +115,17 @@ export class MapboxViewController
       }
     };
     this.setupEventListeners();
+  }
+
+  /**
+   * Swaps the style document in place; `styledata` resyncs the overlays.
+   */
+  setMapDesignType(design: MapboxMapDesignType): void {
+    const style =
+      design.id === MapboxDesign.None.id
+        ? (BLANK_MAP_STYLE as StyleSpecification)
+        : (design.styleJsonURL as string | StyleSpecification);
+    this.mapInstance.setStyle(style);
   }
 
   getMap(): MapboxMap {

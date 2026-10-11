@@ -1,8 +1,8 @@
 import { MapConfig, GeoRectBounds, MapProjection, MarkerTilingOptions, MapProvider, MapViewControllerInterface, MapViewHolderBase, GeoPointInterface, Offset, GeoPoint, MarkerEntity, AbstractMarkerOverlayRenderer, MarkerManager, AddParams, ChangeParams, MarkerState, BitmapIcon, AbstractMarkerController, RasterLayerState, DefaultMarkerEventController, CircleEntity, AbstractCircleOverlayRenderer, CircleManagerInterface, CircleState, CircleController, PolylineEntity, AbstractPolylineOverlayRenderer, PolylineManagerInterface, PolylineState, PolylineController, MapCameraPosition, PolygonEntity, AbstractPolygonOverlayRenderer, PolygonManagerInterface, PolygonState, SlottedOverlayController, OnPolygonEventHandler, OverlayKind, OverlayHit, AbstractGroundImageOverlayRenderer, GroundImageState, GroundImageEntity, RasterLayerOverlayRenderer, RasterLayerAddParams, RasterLayerChangeParams, RasterLayerEntity, RasterLayerController, RasterHeaderSupport, BaseMapViewController, MarkerCapable, CircleCapable, PolylineCapable, PolygonCapable, GroundImageCapable, RasterLayerCapable, MapUISettings, OnMapInitializedHandler, OnMarkerEventHandler, MarkerAnimationOverlayHost, OnGroundImageEventHandler, CameraRestriction, MapViewBaseProps, WebMercatorZoomAltitudeConverter } from '@mapconductor/js-sdk-core';
 import { Map } from 'mapbox-gl';
+import { MapboxMapDesignType, MapboxViewStateInterface } from './state.js';
+export { MapboxDesign, MapboxViewState, useMapboxViewState } from './state.js';
 import React from 'react';
-import { MapboxViewStateInterface } from './state.js';
-export { MapboxDesign, MapboxMapDesignType, MapboxViewState, useMapboxViewState } from './state.js';
 
 interface MapboxConfig extends MapConfig {
     style?: string | mapboxgl.StyleSpecification;
@@ -529,6 +529,10 @@ declare class MapboxViewController extends BaseMapViewController implements MapV
     constructor(holder: MapboxMapViewHolder, markerController: MapboxMarkerController, markerEventController: MapboxMarkerEventController, circleController: MapboxCircleController, polylineController: MapboxPolylineController, polygonController: MapboxPolygonConductor, groundImageController: MapboxGroundImageController, rasterLayerController: MapboxRasterLayerController, styleReadyRef?: {
         current: boolean;
     }, logicalTiltHint?: number | null, projection?: MapProjection);
+    /**
+     * Swaps the style document in place; `styledata` resyncs the overlays.
+     */
+    setMapDesignType(design: MapboxMapDesignType): void;
     getMap(): Map;
     /**
      * 投影法を切り替える。android-sdk の `MapboxMapViewController.setProjection` /
@@ -602,4 +606,4 @@ declare class ZoomAltitudeConverter extends WebMercatorZoomAltitudeConverter {
     static googleZoomToMapboxZoom(googleZoom: number): number;
 }
 
-export { MapBoxMapView, MapBoxMapView2D, type MapBoxMapViewProps, type MapboxConfig, MapboxProvider, MapboxViewController, MapboxViewStateInterface, ZoomAltitudeConverter };
+export { MapBoxMapView, MapBoxMapView2D, type MapBoxMapViewProps, type MapboxConfig, MapboxMapDesignType, MapboxProvider, MapboxViewController, MapboxViewStateInterface, ZoomAltitudeConverter };
