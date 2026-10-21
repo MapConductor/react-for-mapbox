@@ -28,7 +28,7 @@
     "postbuild": "node -e \"require('fs').copyFileSync(require.resolve('mapbox-gl/dist/mapbox-gl.css'), './dist/style.css')\"",
     "dev": "tsup src/index.ts src/state.ts --format cjs,esm --watch",
     "clean": "rm -rf dist",
-    "test": "echo 'No tests yet'"
+    "test": "node --test \"test/**/*.test.mjs\""
   },
   "keywords": [
     "maps",
