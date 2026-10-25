@@ -1,3 +1,4 @@
+import { MapboxDesign } from './MapboxDesign';
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   MapContext,
@@ -11,9 +12,11 @@ import {
   createMapContextValue,
 } from '@mapconductor/js-sdk-react';
 import {
+  useMapViewStyle,
   useCameraRestriction,
   useMapUISettings,
   useMarkerRenderingSupport,
+  useVectorStyleMutationSupport,
 } from '@mapconductor/js-sdk-react/internal';
 import {
   MapViewBaseProps,
@@ -25,9 +28,10 @@ import {
   type GeoPoint,
   type MarkerAnimationOverlayEntry,
   type MapViewControllerInterface,
-  mapViewStateInternal,
+  mapViewStateInternal, BLANK_MAP_STYLE,
   markerIconExtentPx,
 } from '@mapconductor/js-sdk-core';
+import { VectorStyleAsDesign, VectorStyleSupportKey } from '@mapconductor/js-sdk-core';
 import { MapboxProvider, MapboxConfig } from './MapboxProvider';
 import type { MapboxViewStateInterface } from './MapboxViewState';
 import type { MapboxViewController } from './MapboxViewController';
@@ -61,8 +65,43 @@ interface InternalMapBoxMapViewProps extends MapBoxMapViewProps {
  * Note: You must import the Mapbox CSS separately:
  * import '@mapconductor/react-for-mapbox/style.css';
  */
+/**
+ * What Mapbox GL JS will accept of a MapLibre style.
+ *
+ * The layer properties are shared, but two root keys are not: MapLibre's
+ * `projection` is `{ type }` where Mapbox's is `{ name }` -- and Mapbox's
+ * validator crashes on the former rather than reporting it -- and MapLibre's
+ * root `sky` is a colour ramp Mapbox has no equivalent for (its sky is a
+ * layer). The projection is carried over where the name is shared; the sky
+ * is dropped; of several sprite sheets the default one is kept. A URL is
+ * passed through untouched: what it points at is the server's business.
+ */
+function toMapboxStyle(style: string | object): string | object {
+  if (typeof style === 'string') return style;
+  const { projection, sky, sprite, ...rest } = style as {
+    projection?: { type?: string; name?: string };
+    sky?: unknown;
+    sprite?: string | { id?: string; url: string }[];
+  };
+  const result: Record<string, unknown> = { ...rest };
+  const name = projection?.name ?? projection?.type;
+  if (name === 'globe' || name === 'mercator') result.projection = { name };
+  // MapLibre allows several sprite sheets; Mapbox takes one. The default
+  // sheet is the one unprefixed icon names resolve to.
+  if (Array.isArray(sprite)) {
+    const chosen = sprite.find((entry) => entry.id === 'default') ?? sprite[0];
+    if (chosen) result.sprite = chosen.url;
+  } else if (sprite !== undefined) {
+    result.sprite = sprite;
+  }
+  void sky;
+  return result;
+}
+
 function InternalMapBoxMapView({
   state,
+  mapStyle,
+  onStyleDiagnostics,
   onMapLoaded,
   onMapClick,
   onMapLongClick,
@@ -84,6 +123,11 @@ function InternalMapBoxMapView({
   const [provider] = useState(() => new MapboxProvider());
   const [scope] = useState(() => new MapViewScope());
   const [controller, setController] = useState<MapViewControllerInterface | null>(null);
+
+  // 地図の見た目。何が起きるかはこのバックエンドが宣言した能力で決まるので、
+  // ここにプロバイダ固有の分岐は無い。android-sdk の `MapViewStyleEffect`、
+  // ios-sdk の `MapViewStyleHost` と同じ役目。
+  useMapViewStyle(state, controller, mapStyle, onStyleDiagnostics);
   const [isReady, setIsReady] = useState(false);
   // `onMapLoaded` と同じ瞬間を「値」として持つ。イベントを取り逃した後から
   // マウントした子（examples の Three.js overlay 等）も読めるようにするため。
@@ -112,7 +156,12 @@ function InternalMapBoxMapView({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const style = state.mapDesignType.styleJsonURL as string | StyleSpecification;
+    // `None` is handed over as the style object: mapbox-gl rejects a `data:`
+    // style URL (it goes through its own request path, not fetch).
+    const style =
+      state.mapDesignType.id === MapboxDesign.None.id
+        ? (BLANK_MAP_STYLE as StyleSpecification)
+        : (state.mapDesignType.styleJsonURL as string | StyleSpecification);
 
     const config: MapboxConfig = {
       container: containerRef.current,
@@ -232,7 +281,10 @@ function InternalMapBoxMapView({
       bridgeUnsubs.current = [];
       provider.destroy();
     };
-  }, [state.mapDesignType.styleJsonURL]);
+    // Design changes are applied live via the controller (see the state's
+    // mapDesignType setter -> controller.setMapDesignType), so the map is not
+    // torn down and re-initialized when only the design changes.
+  }, []);
 
   useMapUISettings(state, controller);
   // マップ生成時 config だけでなく、prop の変化にも追随させる（android-sdk 相当）。
@@ -249,11 +301,28 @@ function InternalMapBoxMapView({
   void cameraTick;
 
 
+  // Mapbox draws vector styles natively: a layer with a style to show hands
+  // it over instead of rasterising it. Registered on mount, before the map
+  // is ready, so a layer reading the registry on the ready re-render finds it.
+  useEffect(() => {
+    state.serviceRegistry.put(
+      VectorStyleSupportKey,
+      new VectorStyleAsDesign(state, (style, key, rules) => new MapboxDesign(key, toMapboxStyle(style), rules)),
+    );
+    return () => state.serviceRegistry.remove(VectorStyleSupportKey);
+  }, [state]);
+
   // マーカー描画 capability をこのマップのサービスレジストリへ登録する。
   // marker-clustering などの拡張がここから解決する
   // （android-sdk の *MapView.kt / ios-sdk の *MapView.swift が
   //  MarkerRenderingSupportKey を put するのと同じ位置づけ）。
   useMarkerRenderingSupport(state, scope, controller);
+
+  // This renderer can be told to change a loaded style in place, so adjusting
+  // one need not hand it a new document -- which would drop its tiles and
+  // rebuild every overlay the app added. `VectorStyle` looks this up and
+  // takes the cheap road when it is here.
+  useVectorStyleMutationSupport(state, typedControllerRef.current?.getMap() ?? null, typedControllerRef.current);
 
   return (
     <MapContext.Provider value={createMapContextValue({ controller, isReady, isLoaded, state })}>

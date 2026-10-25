@@ -1,17 +1,18 @@
-import type { AttributionRule, MapDesignTypeInterface } from '@mapconductor/js-sdk-core';
+import { BLANK_MAP_STYLE_URL, type AttributionRule, type MapDesignTypeInterface } from '@mapconductor/js-sdk-core';
 
 export interface MapboxMapDesignType extends MapDesignTypeInterface<string> {
-  readonly styleJsonURL: string;
+  /** A `style.json` URL, or the parsed style object (what a vector tile layer hands over). */
+  readonly styleJsonURL: string | object;
 }
 
 export class MapboxDesign implements MapboxMapDesignType {
   readonly id: string;
-  readonly styleJsonURL: string;
+  readonly styleJsonURL: string | object;
   readonly attributionRules: readonly AttributionRule[];
 
   constructor(
     id: string,
-    styleJsonURL: string,
+    styleJsonURL: string | object,
     attributionRules: readonly AttributionRule[] = []
   ) {
     this.id = id;
@@ -20,9 +21,13 @@ export class MapboxDesign implements MapboxMapDesignType {
   }
 
   getValue(): string {
-    return `mapDesign_id=${this.id},style=${this.styleJsonURL}`;
+    // An object style is identified by the id, which carries its digest.
+    const style = typeof this.styleJsonURL === 'string' ? this.styleJsonURL : 'object';
+    return `mapDesign_id=${this.id},style=${style}`;
   }
 
+  /** No basemap: a background colour and nothing else. */
+  static readonly None = new MapboxDesign('none', BLANK_MAP_STYLE_URL);
   static readonly Streets = new MapboxDesign('streets', 'mapbox://styles/mapbox/streets-v12');
   static readonly Outdoors = new MapboxDesign('outdoors', 'mapbox://styles/mapbox/outdoors-v12');
   static readonly Light = new MapboxDesign('light', 'mapbox://styles/mapbox/light-v11');
