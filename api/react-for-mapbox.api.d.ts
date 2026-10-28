@@ -606,4 +606,5 @@ declare class ZoomAltitudeConverter extends WebMercatorZoomAltitudeConverter {
     static googleZoomToMapboxZoom(googleZoom: number): number;
 }
 
-export { MapBoxMapView, MapBoxMapView2D, type MapBoxMapViewProps, type MapboxConfig, MapboxMapDesignType, MapboxProvider, MapboxViewController, MapboxViewStateInterface, ZoomAltitudeConverter };
+export { MapBoxMapView, MapBoxMapView2D, MapboxMapDesignType, MapboxProvider, MapboxViewController, MapboxViewStateInterface, ZoomAltitudeConverter };
+export type { MapBoxMapViewProps, MapboxConfig };
