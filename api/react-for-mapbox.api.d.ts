@@ -245,7 +245,6 @@ declare class MapboxCircleController extends CircleController<MapboxActualCircle
     constructor(renderer: MapboxCircleOverlayRenderer);
     update(state: CircleState): Promise<void>;
     resync(): Promise<void>;
-    clear(): Promise<void>;
     /**
      * Hit-test a map click (its lat/lng) against the circles geometrically (inside
      * the fill radius) and dispatch the click on the matching circle. Does NOT use
@@ -300,7 +299,6 @@ declare class MapboxPolylineController extends PolylineController<MapboxActualPo
     readonly renderer: MapboxPolylineOverlayRenderer;
     constructor(renderer: MapboxPolylineOverlayRenderer);
     resync(): Promise<void>;
-    clear(): Promise<void>;
     /**
      * Hit-test a map click (its lat/lng) against the polylines geometrically and,
      * if the click lands within the tap tolerance of a line, dispatch the click on
@@ -398,6 +396,7 @@ declare class MapboxGroundImageOverlayRenderer extends AbstractGroundImageOverla
     private readonly canEditStyle;
     /** Last values applied to the map style, keyed by state id. */
     private readonly applied;
+    private readonly pendingRemovals;
     constructor({ holder, canEditStyle, }: {
         holder: MapboxMapViewHolder;
         canEditStyle: () => boolean;
@@ -413,6 +412,7 @@ declare class MapboxGroundImageOverlayRenderer extends AbstractGroundImageOverla
     /** Sync an already-created image source+layer to the current state (diffed). */
     private applyToExisting;
     removeGroundImage(entity: GroundImageEntity<string>): Promise<void>;
+    private removeFromStyle;
 }
 
 declare class MapboxGroundImageController implements SlottedOverlayController {
