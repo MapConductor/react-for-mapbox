@@ -32,7 +32,7 @@ import { MapboxMarkerController } from './marker/MapboxMarkerController';
 import { MapboxMarkerEventController } from './marker/MapboxMarkerEventController';
 import { MapboxCircleController } from './circle/MapboxCircleController';
 import { MapboxPolylineController } from './polyline/MapboxPolylineController';
-import { MapboxPolygonConductor } from './polygon/MapboxPolygonConductor';
+import { MapboxPolygonController } from './polygon/MapboxPolygonController';
 import { MapboxGroundImageController } from './groundimage/MapboxGroundImageController';
 import { MapboxRasterLayerController } from './raster/MapboxRasterLayerController';
 import { installMapEventListeners } from './MapboxViewControllerEvents';
@@ -66,7 +66,7 @@ export class MapboxViewController
   private readonly markerEventController: MapboxMarkerEventController;
   private readonly circleController: MapboxCircleController;
   private readonly polylineController: MapboxPolylineController;
-  private readonly polygonController: MapboxPolygonConductor;
+  private readonly polygonController: MapboxPolygonController;
   private readonly groundImageController: MapboxGroundImageController;
   private readonly rasterLayerController: MapboxRasterLayerController;
 
@@ -76,7 +76,7 @@ export class MapboxViewController
     markerEventController: MapboxMarkerEventController,
     circleController: MapboxCircleController,
     polylineController: MapboxPolylineController,
-    polygonController: MapboxPolygonConductor,
+    polygonController: MapboxPolygonController,
     groundImageController: MapboxGroundImageController,
     rasterLayerController: MapboxRasterLayerController,
     styleReadyRef: { current: boolean } = { current: true },
