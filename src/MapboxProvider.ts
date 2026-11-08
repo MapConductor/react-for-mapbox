@@ -27,7 +27,7 @@ import { MapboxCircleOverlayRenderer } from './circle/MapboxCircleOverlayRendere
 import { MapboxPolylineController } from './polyline/MapboxPolylineController';
 import { MapboxPolylineLayer, type MapboxActualPolyline } from './polyline/MapboxPolylineLayer';
 import { MapboxPolylineOverlayRenderer } from './polyline/MapboxPolylineOverlayRenderer';
-import { MapboxPolygonConductor } from './polygon/MapboxPolygonConductor';
+import { MapboxPolygonController } from './polygon/MapboxPolygonController';
 import { MapboxPolygonLayer, type MapboxActualPolygon } from './polygon/MapboxPolygonLayer';
 import { MapboxPolygonOverlayRenderer } from './polygon/MapboxPolygonOverlayRenderer';
 import { MapboxGroundImageController } from './groundimage/MapboxGroundImageController';
@@ -214,11 +214,11 @@ function getPolylineController(
 function getPolygonController(
   holder: MapboxMapViewHolder,
   canEditStyle: () => boolean,
-): MapboxPolygonConductor {
+): MapboxPolygonController {
   const polygonManager = new PolygonManager<MapboxActualPolygon>();
   const layer = new MapboxPolygonLayer({ holder, canEditStyle });
   const renderer = new MapboxPolygonOverlayRenderer({ layer, polygonManager, holder });
-  return new MapboxPolygonConductor(renderer);
+  return new MapboxPolygonController(renderer);
 }
 
 function getGroundImageController(
