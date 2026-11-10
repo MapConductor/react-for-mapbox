@@ -14,14 +14,14 @@ import {
 import {
   useMapViewStyle,
   useCameraRestriction,
-  useMapUISettings,
+  useMapUISettings, usePolylineTilingOptions,
   useMarkerRenderingSupport,
   useVectorStyleMutationSupport,
 } from '@mapconductor/js-sdk-react/internal';
 import {
   MapViewBaseProps,
   OverlayCollector,
-  MarkerTilingOptions,
+  MarkerTilingOptions, PolylineTilingOptions,
   MapProjection,
   type GeoRectBounds,
   type MapCameraPosition,
@@ -47,6 +47,12 @@ export interface MapBoxMapViewProps extends MapViewBaseProps<MapboxViewStateInte
   onError?: (error: Error) => void;
   children?: React.ReactNode;
   markerTilingOptions?: MarkerTilingOptions;
+  /**
+   * When to draw polylines as raster tiles ({@link PolylineTilingOptions.Default} if omitted).
+   * Read when the map is created; a later value applies from the next time the polylines are
+   * handed to the map.
+   */
+  polylineTilingOptions?: PolylineTilingOptions;
   /**
    * 投影法。省略時は 3D 版が Globe、2D 版が Mercator。
    * android-sdk / ios-sdk の `projection: MapProjection` と同じ役割で、
@@ -118,6 +124,7 @@ function InternalMapBoxMapView({
   onError,
   children,
   markerTilingOptions,
+  polylineTilingOptions,
 }: InternalMapBoxMapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [provider] = useState(() => new MapboxProvider());
@@ -173,6 +180,7 @@ function InternalMapBoxMapView({
       projection,
       initCameraPosition: state.cameraPosition,
       markerTilingOptions,
+      polylineTilingOptions,
     };
 
     provider
@@ -287,6 +295,7 @@ function InternalMapBoxMapView({
   }, []);
 
   useMapUISettings(state, controller);
+  usePolylineTilingOptions(controller, polylineTilingOptions);
   // マップ生成時 config だけでなく、prop の変化にも追随させる（android-sdk 相当）。
   useCameraRestriction(controller, { cameraRestriction, restrictBounds, minZoom, maxZoom });
 
