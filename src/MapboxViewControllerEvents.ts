@@ -5,7 +5,7 @@ import type { MapboxMarkerController } from './marker/MapboxMarkerController';
 import type { MapboxMarkerEventController } from './marker/MapboxMarkerEventController';
 import type { MapboxCircleController } from './circle/MapboxCircleController';
 import type { MapboxPolylineController } from './polyline/MapboxPolylineController';
-import type { MapboxPolygonConductor } from './polygon/MapboxPolygonConductor';
+import type { MapboxPolygonController } from './polygon/MapboxPolygonController';
 import type { MapboxGroundImageController } from './groundimage/MapboxGroundImageController';
 import type { MapboxRasterLayerController } from './raster/MapboxRasterLayerController';
 
@@ -27,7 +27,7 @@ export interface MapEventDeps {
   readonly markerEventController: MapboxMarkerEventController;
   readonly circleController: MapboxCircleController;
   readonly polylineController: MapboxPolylineController;
-  readonly polygonController: MapboxPolygonConductor;
+  readonly polygonController: MapboxPolygonController;
   readonly groundImageController: MapboxGroundImageController;
   readonly rasterLayerController: MapboxRasterLayerController;
   getCameraPosition(): MapCameraPosition | null;

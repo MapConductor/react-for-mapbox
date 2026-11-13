@@ -5,7 +5,7 @@ import {
   type MapCameraPosition,
   type VisibleRegion,
 } from '@mapconductor/js-sdk-core';
-import { toCameraPosition, toMapCameraPosition } from './MapCameraPosition';
+import { toCameraPosition, toMapCameraPosition, readVerticalFov } from './MapCameraPosition';
 import type { MapboxMapViewHolder } from './MapboxMapViewHolder';
 
 /**
@@ -24,6 +24,7 @@ export function jumpToPosition(map: MapboxMap, position: MapCameraPosition): Pro
       zoom: cam.zoom,
       bearing: cam.bearing,
       pitch: cam.tilt,
+      ...(cam.padding ? { padding: cam.padding } : {}),
     });
   });
 }
@@ -37,6 +38,7 @@ export function easeToPosition(map: MapboxMap, position: MapCameraPosition, dura
       zoom: cam.zoom,
       bearing: cam.bearing,
       pitch: cam.tilt,
+      ...(cam.padding ? { padding: cam.padding } : {}),
       duration: durationMillis || 500,
     });
   });
@@ -72,6 +74,8 @@ export function readCameraPosition(
     zoom: map.getZoom(),
     bearing: map.getBearing(),
     tilt: map.getPitch(),
+    padding: map.getPadding(),
+    fov: readVerticalFov(map),
     logicalTiltHint: logicalTiltHint,
   });
   if (!camera) return camera;
